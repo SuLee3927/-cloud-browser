@@ -1,0 +1,20 @@
+# 让服务器上的 Chrome 常驻（可选）
+# 用法：把下面的路径改成你的，存到 /etc/systemd/system/cloudbrowser-chrome.service
+#      然后 sudo systemctl daemon-reload && sudo systemctl enable --now cloudbrowser-chrome
+[Unit]
+Description=Cloud Browser (headless Chrome with CDP)
+After=network.target
+
+[Service]
+User=ubuntu
+Environment=CDP_PORT=9222
+ExecStart=/usr/bin/google-chrome --headless=new \
+  --remote-debugging-port=9222 \
+  --remote-debugging-address=127.0.0.1 \
+  --user-data-dir=/home/ubuntu/.cloudbrowser-chrome \
+  --no-first-run --no-default-browser-check --disable-gpu
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
