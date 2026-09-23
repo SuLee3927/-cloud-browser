@@ -1,0 +1,8 @@
+# 服务器侧 ~/.ssh/authorized_keys
+# 关键：把这把"云浏览器钥匙"限制成只能转发端口——拿到钥匙也开不了 shell
+command="/bin/false",no-pty,no-agent-forwarding,no-X11-forwarding,no-user-rc ssh-ed25519 AAAA...你的公钥... cloud-browser
+
+# 说明：
+#   command="/bin/false"  → 任何 shell 请求直接失败
+#   no-pty                → 不给终端
+#   配合 sshd 默认的 GatewayPorts no，反向隧道只会绑在服务器本机 127.0.0.1，外网碰不到
