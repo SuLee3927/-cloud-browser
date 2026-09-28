@@ -95,6 +95,41 @@ ADB_SERVER_SOCKET=tcp:127.0.0.1:5039 adb devices -l
 ADB_SERVER_SOCKET=tcp:127.0.0.1:5039 ANDROID_SERIAL='设备序列号' node server/android-adb-example.js info
 ```
 
+## 建议封装成 MCP 工具
+
+仓库里的脚本是最小连接示例；给 ChatGPT、Codex 或其他 Agent 长期使用时，建议在服务器侧再包一层 MCP，
+不要让模型直接拼接 shell 命令。MCP 层负责参数校验、设备路由、App 白名单、超时、任务档案和操作日志：
+
+```text
+Agent → MCP 工具 → 任务/权限校验 → CDP 或 ADB → 家庭电脑上的浏览器/安卓设备
+```
+
+建议只注册一个长期稳定的总入口，例如：
+
+```json
+{
+  "name": "workshop",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "module": { "type": "string" },
+      "action": { "type": "string" },
+      "payload": { "type": "object", "additionalProperties": true }
+    },
+    "required": ["module", "action"]
+  }
+}
+```
+
+- `module=browser`：CDP 浏览器动作。
+- `module=android`：模拟器截图、点击、输入、滑动、长按。
+- `module=wechat`：只路由到微信专用真机，并应用更严格的包名与文件权限。
+- `action=describe`：返回各模块当前能力和参数说明。
+
+后续新增动作时只扩展服务端的 `module + action` 路由，不增加新的顶层 MCP tool，也不修改顶层 schema。
+这样可以避开部分客户端冻结工具清单的问题，通常无需反复删除、重连或重新授权。原始脚本仍可用于排障和本地自动化；
+MCP 是推荐的 AI 接入层，不是隧道本身的必需组件。
+
 ## 安全设计
 
 - 隧道把 Chrome 调试端口绑到**服务器本机**（`GatewayPorts no`），外网碰不到
