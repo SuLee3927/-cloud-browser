@@ -1,7 +1,7 @@
 # ☁️ Cloud Browser Bridge · 云浏览器桥
 
-把**你家/内网里的真实浏览器**变成**服务器上的 AI 可以远程操控的浏览器**——
-真实住宅 IP、真实浏览器指纹、登录态存在本机，重启不丢。
+把**你家/内网里的真实浏览器与安卓设备**变成服务器上的 AI 可以操作的远程工作台——
+浏览器保留住宅 IP、真实指纹与本地登录态；安卓既可使用模拟器，也可接 USB 真机。
 
 ## 它解决什么问题
 
@@ -20,6 +20,15 @@
   │      ▼         │  ssh -R 反向隧道    │  http://127.0.0.1:9223
   │   9222 端口  ──┼───────────────────▶│   (Chrome 调试端口)  │
   └────────────────┘  由家里主动连出去   └──────────────────────┘
+```
+
+可选的 Android 通道复用同一条 SSH 连接：
+
+```
+安卓模拟器 / USB 真机 → Windows ADB server :5037
+                              │ ssh -R
+                              ▼
+                         服务器 127.0.0.1:5039
 ```
 
 - **浏览器跑在你家**：真实 IP、真实指纹、登录态在本地 profile 里（重启不丢）
@@ -47,7 +56,9 @@
 | `windows/home-bridge.cmd` | 家里那台的主程序：拉起专用 Chrome + 建反向隧道 + 断线自动重连 |
 | `windows/start-hidden.vbs` | 后台静默启动（配合开机自启） |
 | `windows/启动步骤.md` | 一步步的安装与排障备忘（照着做即可） |
+| `windows/安卓设备接入.md` | 模拟器与 USB 真机接入、验证和安全边界 |
 | `server/cdp-bridge-example.js` | 服务器侧最小示例：连上 CDP 并操作页面 |
+| `server/android-adb-example.js` | 服务器侧最小示例：列设备、截图、点击、推文件 |
 | `server/authorized_keys.example` | 服务器侧把钥匙限制成"只能转发端口"的写法 |
 
 ## 快速开始
@@ -66,6 +77,8 @@
 4. 用记事本打开 `home-bridge.cmd`，把 `SERVER`、`PORT`、`KEY` 三行改成你自己的
 5. 双击 `start-hidden.vbs` 跑起来（想排查问题就双击 `home-bridge.cmd`，有窗口能看到日志）
 
+如需 Android，把 `ENABLE_ANDROID=1`，并按 [`windows/安卓设备接入.md`](windows/安卓设备接入.md) 完成一次配置。
+
 ### 二、服务器
 
 ```bash
@@ -74,12 +87,21 @@ npm i playwright-core
 node server/cdp-bridge-example.js
 ```
 
+Android 通道启用后：
+
+```bash
+ADB_SERVER_SOCKET=tcp:127.0.0.1:5039 adb devices -l
+ADB_SERVER_SOCKET=tcp:127.0.0.1:5039 ANDROID_SERIAL='设备序列号' node server/android-adb-example.js info
+```
+
 ## 安全设计
 
 - 隧道把 Chrome 调试端口绑到**服务器本机**（`GatewayPorts no`），外网碰不到
 - 那把钥匙在服务器侧被限制成 `command="/bin/false",no-pty`——**拿到也只能转发端口，开不了 shell**
 - Chrome 用**独立 profile**（`--user-data-dir`），和你日常浏览器的账号/书签/密码完全隔离
 - CDP 端口只监听 `127.0.0.1`，且只经隧道可达
+- ADB 转发同样只绑定服务器 `127.0.0.1`，不要把 5039 暴露到公网
+- AI 侧应做设备与 App allowlist；真机通道不要提供任意包启动、任意文件遍历
 
 ## 注意事项
 
@@ -87,6 +109,7 @@ node server/cdp-bridge-example.js
 - **开机自启**：把 `start-hidden.vbs` 的快捷方式丢进 `Win+R → shell:startup`
 - **电脑睡了/关了 = 浏览器不在线**，这是预期行为，醒来自动恢复
 - ⚠️ 别把服务器地址、私钥、真实账号信息提交进这个仓库
+- MCP 只是 AI 的“手脚”，不会反向唤醒官端会话；实时收消息需要另配常驻事件桥／通知监听器和代理工作线程
 
 ## License
 
