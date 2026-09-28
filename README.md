@@ -57,6 +57,7 @@
 | `windows/start-hidden.vbs` | 后台静默启动（配合开机自启） |
 | `windows/启动步骤.md` | 一步步的安装与排障备忘（照着做即可） |
 | `windows/安卓设备接入.md` | 模拟器与 USB 真机接入、验证和安全边界 |
+| `docs/安卓视觉操作与微信真机实战.md` | 坐标定位、元素树降级、中文输入、文件发送与常见误判 |
 | `server/cdp-bridge-example.js` | 服务器侧最小示例：连上 CDP 并操作页面 |
 | `server/android-adb-example.js` | 服务器侧最小示例：列设备、截图、点击、推文件 |
 | `server/authorized_keys.example` | 服务器侧把钥匙限制成"只能转发端口"的写法 |
